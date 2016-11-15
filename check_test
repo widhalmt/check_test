@@ -1,0 +1,28 @@
+#!/bin/bash
+
+CONFIGFILE="${2}"
+
+### default values ###
+
+STATUS=0
+OUTPUT="Test"
+
+# source the config file to overwrite default values
+
+if [ -z ${CONFIGFILE} ]
+then
+  OUTPUT="${OUTPUT} - no configfile"
+else
+  if [ -f ${CONFIGFILE} ]
+  then
+    . ${CONFIGFILE}
+  else
+    OUTPUT="${OUTPUT} - configfile unreadable"
+  fi
+fi
+
+# output
+
+echo ${OUTPUT}
+
+exit ${STATUS}
