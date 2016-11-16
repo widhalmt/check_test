@@ -4,8 +4,59 @@ CONFIGFILE="${2}"
 
 ### default values ###
 
-STATUS=0
+STATUS=3
 OUTPUT="Test"
+MODE="manual"
+STATUSDIR=/var/lib/icinga2
+LOGDIR=/var/log/icinga2
+TESTNAME=default
+
+### derived variables
+
+STATUSFILE=${STATUSDIR}/check_test-${TESTNAME}
+LOGFILE=${LOGDIR}/check_test-${TESTNAME}
+
+# manual
+
+function manual {
+  OUTPUT="${OUTPUT} - manual mode"
+}
+
+# flapping
+
+function flapping {
+	if [ -z "${START_CHECKS}" ]
+	then
+		echo "Flapping mode lacks configuration"
+		exit 3
+	fi
+	if [ -f ${STATUSFILE} ]
+	then
+		FLAPCHECK=$(grep "FLAPCHECK" ${STATUSFILE} | cut -d: -f2)
+		FLAPSTAT=$(grep "FLAPSTAT" ${STATUSFILE} | cut -d: -f2)
+	else
+		FLAPCHECK=0
+		FLAPSTAT=0
+	fi
+	if [ ${FLAPCHECK} -gt ${START_CHECKS} ]
+	then
+		if [ ${FLAPSTAT} = 0 ]
+		then
+			FLAPSTAT=2
+		else
+			FLAPSTAT=0
+		fi
+		echo "FLAPCHECK:0" > ${STATUSFILE}
+		echo "FLAPSTAT:${FLAPSTAT}" >> ${STATUSFILE}
+	else
+		FLAPCHECK=$((${FLAPCHECK} + 1))
+		echo "FLAPCHECK:${FLAPCHECK}" > ${STATUSFILE}
+		echo "FLAPSTAT:${FLAPSTAT}" >> ${STATUSFILE}
+	fi
+	STATUS=${FLAPSTAT}
+	OUTPUT="${OUTPUT} - ${MODE}: ${FLAPCHECK}"
+
+}
 
 # source the config file to overwrite default values
 
@@ -21,6 +72,14 @@ else
   fi
 fi
 
+case ${MODE} in
+	"flapping")
+		flapping
+		;;
+	*)
+		manual
+		;;
+esac
 # output
 
 echo ${OUTPUT}
