@@ -38,7 +38,7 @@ function flapping {
 		FLAPCHECK=0
 		FLAPSTAT=0
 	fi
-	if [ ${FLAPCHECK} -gt ${START_CHECKS} ]
+	if [ ${FLAPCHECK} -ge ${START_CHECKS} ]
 	then
 		if [ ${FLAPSTAT} = 0 ]
 		then
